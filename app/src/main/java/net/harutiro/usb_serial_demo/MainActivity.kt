@@ -7,16 +7,27 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
@@ -47,7 +58,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     var usbIoManager: SerialInputOutputManager? = null
     var port: UsbSerialPort? = null
 
-    Column {
+    var result by remember { mutableStateOf("") }
+    val state = rememberScrollState()
+
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
 
         Button(onClick = {
             // Find all available drivers from attached devices.
@@ -96,6 +113,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 val buffer = StringBuilder()
+                var count = 0
 
                 usbIoManager = SerialInputOutputManager(port, object : SerialInputOutputManager.Listener {
                     override fun onRunError(e: Exception) {
@@ -112,6 +130,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                             Log.d("USB", "受信: $line")
                             buffer.delete(0, newlineIndex + 1)
                             newlineIndex = buffer.indexOf("\n")
+
+
+                            if(count % 100 == 0){
+                                result += line + "\n"
+                            }
+                            count++
+
                         }
                     }
                 })
@@ -134,6 +159,18 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             Text(
                 text = "接続終了",
                 modifier = modifier
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .background(Color.LightGray)
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .verticalScroll(state)
+        ) {
+            Text(
+                text = result
             )
         }
     }
